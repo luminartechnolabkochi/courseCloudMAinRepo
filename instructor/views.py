@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from django.views.generic import View
-from instructor.forms import InstructorCreateForm
+from instructor.forms import InstructorCreateForm,LessonFormSet,ModuleForm
 
 # Create your views here.
 class InstructorCreateView(View):
@@ -22,3 +22,20 @@ class InstructorCreateView(View):
         
         else:
             return render(request,"instructor_register.html",{"form":form_instance})
+
+
+class ModuleLessonCreateView(View):
+
+    def get(self,request,*args,**kwargs):
+
+        module_form=ModuleForm()
+
+        lesson_formset=LessonFormSet()
+
+        context={
+                    "module_form":module_form,
+                    "lesson_formset":lesson_formset
+                }
+
+        return render(request,"module_add.html",context)
+
