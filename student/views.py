@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate,login
 
 from django.urls import reverse_lazy,reverse
 
-from instructor.models import Course
+from instructor.models import Course,Cart
 
 class StudentRegistrationView(CreateView):
 
@@ -77,3 +77,62 @@ class CourseDetailView(View):
         course_instance=Course.objects.get(id=id)
 
         return render(request,"course_retrieve.html",{"course":course_instance})
+
+# url:localhost:8000/student/courses/2/add-to-cart/
+
+
+class AddToCartView(View):
+
+    def get(self,request,*args,**kwargs):
+
+        id=kwargs.get("pk")
+
+        course_instance=Course.objects.get(id=id)
+
+       
+
+        user_instance=request.user
+
+        # Cart.objects.create(course_object=course_instance,user=user_instance)
+
+        cart_instance,created=Cart.objects.get_or_create(course_object=course_instance,user=user_instance)
+        print(created,"=====================")
+        return redirect("index")
+
+
+
+# url:localhost:8000/student/cart-summary/
+# CartSummaryView
+
+from django.db.models import Sum
+
+class CartSummaryView(View):
+
+
+    def get(self,request,*args,**kwargs):
+
+        qs=request.user.basket.all()
+        # qs=Cart.objects.filter(user=request.user)
+
+        cart_total=qs.values("course_object__price").aggregate(total=Sum("course_object__price")).get("total")
+
+
+        print(cart_total,"*************************")#{"total":59999}
+
+       
+
+
+        return render(request,"cart-summary.html",{"carts":qs,"basket_total":cart_total})
+    
+
+# localhost:8000/student//carts/2/remove/
+
+class CartItemDeleteView(View):
+
+    def get(self,request,*args,**kwargs):
+
+        id=kwargs.get("pk")
+
+        Cart.objects.get(id=id).delete()
+
+        return redirect("cart-summary")
