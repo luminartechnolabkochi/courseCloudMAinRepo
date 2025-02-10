@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate,login
 
 from django.urls import reverse_lazy,reverse
 
-from instructor.models import Course,Cart
+from instructor.models import Course,Cart,Order,Lesson,Module
 
 class StudentRegistrationView(CreateView):
 
@@ -63,7 +63,11 @@ class IndexView(View):
        
        all_courses=Course.objects.all()
 
-       return render(request,"home.html",{"courses":all_courses})
+       purchased_courses=Order.objects.filter(student=request.user).values_list("course_objects",flat=True)
+       print(purchased_courses,"=========================")      
+      
+
+       return render(request,"home.html",{"courses":all_courses,"purchased_courses":purchased_courses})
    
 
 # localhost:8000/student/courses/2
@@ -136,3 +140,89 @@ class CartItemDeleteView(View):
         Cart.objects.get(id=id).delete()
 
         return redirect("cart-summary")
+    
+
+
+class CheckOutView(View):
+
+    def get(self,request,*args,**kwargs):
+
+        cart_items=request.user.basket.all()
+
+        order_total=sum([ci.course_object.price for ci in cart_items])
+
+
+        order_instance=Order.objects.create(student=request.user,total=order_total)
+
+        for ci in cart_items:
+
+            order_instance.course_objects.add(ci.course_object)
+
+            ci.delete()
+        
+        order_instance.save()
+
+        
+        return redirect("index")
+
+class MyCoursesView(View):
+
+    def get(self,request,*args,**kwargs):
+
+        qs=request.user.purchase.all()
+
+        return render(request,"mycourses.html",{"orders":qs})
+    
+# localhost:8000/student/courses?category=webdevelopent
+# requet.GET {category:webdevelopent}
+
+# localhost:8000/students/courses/1/watch?module=1&lesson=5
+#?optional  query parameter
+
+class LessonDetailView(View):
+
+    def get(self,request,*args,**kwargs):
+
+        course_id=kwargs.get("pk")
+
+        course_instance=Course.objects.get(id=course_id)
+        # request.GET={"module":2,"lesson":2}
+
+        module_id=request.GET.get("module") if "module" in request.GET else course_instance.modules.all().first()
+
+
+        module_instance=Module.objects.get(id=module_id,course_object=course_instance)
+        
+        lesson_id=request.GET.get("lesson") if "lesson" in request.GET else module_instance.lessons.all().first()
+
+        lesson_instance=Lesson.objects.get(id=lesson_id,module_object=module_instance)
+
+        return render(request,"lesson_detail.html",{"course":course_instance,"lesson":lesson_instance})
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+        
+
