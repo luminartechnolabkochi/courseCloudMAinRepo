@@ -188,12 +188,12 @@ class LessonDetailView(View):
         course_instance=Course.objects.get(id=course_id)
         # request.GET={"module":2,"lesson":2}
 
-        module_id=request.GET.get("module") if "module" in request.GET else course_instance.modules.all().first()
+        module_id=request.GET.get("module") if "module" in request.GET else course_instance.modules.all().first().id
 
 
         module_instance=Module.objects.get(id=module_id,course_object=course_instance)
         
-        lesson_id=request.GET.get("lesson") if "lesson" in request.GET else module_instance.lessons.all().first()
+        lesson_id=request.GET.get("lesson") if "lesson" in request.GET else module_instance.lessons.all().first().id
 
         lesson_instance=Lesson.objects.get(id=lesson_id,module_object=module_instance)
 
