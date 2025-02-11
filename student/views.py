@@ -11,6 +11,13 @@ from django.urls import reverse_lazy,reverse
 
 from instructor.models import Course,Cart,Order,Lesson,Module
 
+import razorpay
+
+
+
+
+
+
 class StudentRegistrationView(CreateView):
 
     template_name="student_register.html"
@@ -161,6 +168,14 @@ class CheckOutView(View):
             ci.delete()
         
         order_instance.save()
+
+        if order_total>0:
+            # authenticate
+            client = razorpay.Client(auth=(RZP_KEY_ID, RZP_KEY_SECRET))
+            # create a order
+            data = { "amount": order_total*100, "currency": "INR", "receipt": "order_rcptid_11" }
+            payment = client.order.create(data=data)
+            print(payment)
 
         
         return redirect("index")
